@@ -3,6 +3,8 @@ const app = require("./src/app.js");
 const Restaurant = require("./models");
 const syncSeed = require("./seed.js");
 
+let restaurantAmount
+
 beforeAll(async () => {
     await syncSeed();
     const restaurants = await Restaurant.findAll({});
@@ -62,4 +64,58 @@ test("should delete db entry by id", async () => {
     const restaurants = await Restaurant.findAll({});
     expect(restaurants.length).toEqual(restaurantAmount);
     expect(restaurants[0].id).not.toEqual(1)
+})
+
+test("should return an error when name is empty", async () => {
+    const response = await request(app)
+    .post("/restaurants")
+    .send({ name: "", location: "Denton", cuisine: "tapas"});
+    expect(response.statusCode).toEqual(200);
+    expect(response.body).toEqual({
+        error: [
+            {
+                value: "",
+                msg: "Name is required.",
+                path: "name",
+                location: "body",
+                type: "field"
+            }
+        ]
+    })
+})
+
+test("should return an error when location is empty", async () => {
+    const response = await request(app)
+    .post("/restaurants")
+    .send({ name: "orangetree", location: "", cuisine: "tapas"});
+    expect(response.statusCode).toEqual(200);
+    expect(response.body).toEqual({
+        error: [
+            {
+                value: "",
+                msg: "Location is required.",
+                path: "location",
+                location: "body",
+                type: "field"
+            }
+        ]
+    })
+})
+
+test("should return an error when cuisine is empty", async () => {
+    const response = await request(app)
+    .post("/restaurants")
+    .send({ name: "orangeTree", location: "Denton", cuisine: ""});
+    expect(response.statusCode).toEqual(200);
+    expect(response.body).toEqual({
+        error: [
+            {
+                value: "",
+                msg: "Cuisine is required.",
+                path: "cuisine",
+                location: "body",
+                type: "field"
+            }
+        ]
+    })
 })
